@@ -31,10 +31,10 @@ if sys.version_info >= (3, 5):
     from functools import lru_cache
 else:
     from pathlib2 import Path
-    from backports.functools_lru_cache import lru_cache
+    from pipenv.vendor.backports.functools_lru_cache import lru_cache
 
 if sys.version_info < (3, 3):
-    from backports.shutil_get_terminal_size import get_terminal_size
+    from pipenv.vendor.backports.shutil_get_terminal_size import get_terminal_size
     from .backports.tempfile import NamedTemporaryFile
 else:
     from tempfile import NamedTemporaryFile
@@ -43,7 +43,7 @@ else:
 try:
     from weakref import finalize
 except ImportError:
-    from backports.weakref import finalize
+    from pipenv.vendor.backports.weakref import finalize
 
 try:
     from functools import partialmethod
