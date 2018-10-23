@@ -3,7 +3,7 @@ import os
 import signal
 import sys
 
-from .termcolors import colored
+from .termcolors import colored, COLORS
 from .compat import fs_str
 
 import cursor
@@ -15,6 +15,7 @@ except ImportError:
     Spinners = None
 else:
     from yaspin.spinners import Spinners
+    from yaspin.constants import COLOR_MAP
 
 handler = None
 if yaspin and os.name == "nt":
@@ -40,6 +41,16 @@ class DummySpinner(object):
         else:
             self.write_err(traceback)
         return False
+
+    def __getattr__(self, k):
+        try:
+            retval = super(DummySpinner, self).__getattribute__(k)
+        except AttributeError:
+            if k in COLOR_MAP.keys() or k.upper() in COLORS:
+                return self
+            raise
+        else:
+            return retval
 
     def fail(self, exitcode=1, text=None):
         if text:

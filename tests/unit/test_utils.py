@@ -215,7 +215,7 @@ class TestUtils:
             ),
         ],
     )
-    @patch("delegator.run")
+    @patch("pythonfinder.utils.get_python_version")
     def test_python_version_output_variants(
         self, mocked_delegator, version_output, version
     ):
