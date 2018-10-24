@@ -97,6 +97,7 @@ def main(pre, clear, verbose, system, requirements_dir, packages):
 
 
 if __name__ == "__main__":
+    os.environ["PIP_DISABLE_PIP_VERSION_CHECK"] = "1"
     _patch_path()
     parser = get_parser()
     parsed, remaining = parser.parse_known_intermixed_args()
