@@ -70,6 +70,7 @@ PATCHED_RENAMES = {
 
 LIBRARY_RENAMES = {
     'pip': 'pipenv.patched.notpip',
+    "functools32": "pipenv.vendor.backports.functools_lru_cache",
     'enum34': 'enum',
 }
 

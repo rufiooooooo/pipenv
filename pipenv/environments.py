@@ -1,3 +1,5 @@
+# -*- coding=utf-8 -*-
+
 import os
 import sys
 from appdirs import user_cache_dir
@@ -261,6 +263,6 @@ def is_quiet(threshold=-1):
     return PIPENV_VERBOSITY <= threshold
 
 
-PIPENV_SPINNER_FAIL_TEXT = fs_str(to_text("✘ {0}") if not PIPENV_HIDE_EMOJIS else "{0}")
+PIPENV_SPINNER_FAIL_TEXT = fs_str(to_text(u"✘ {0}")) if not PIPENV_HIDE_EMOJIS else ("{0}")
 
-PIPENV_SPINNER_OK_TEXT = fs_str(to_text("✔ {0}") if not PIPENV_HIDE_EMOJIS else "{0}")
+PIPENV_SPINNER_OK_TEXT = fs_str(to_text(u"✔ {0}")) if not PIPENV_HIDE_EMOJIS else ("{0}")

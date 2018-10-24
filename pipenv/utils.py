@@ -369,9 +369,9 @@ def venv_resolve_deps(
         with spinner(text=fs_str("Locking..."), spinner_name=environments.PIPENV_SPINNER,
                 nospin=environments.PIPENV_NOSPIN) as sp:
             c = delegator.run(Script.parse(cmd).cmdify(), block=False, env=os.environ.copy())
-            _out = ""
+            _out = u""
             while True:
-                result = c.expect("\n", timeout=-1)
+                result = c.expect(u"\n", timeout=-1)
                 if result is EOF or result is None:
                     break
                 _out = c.out
