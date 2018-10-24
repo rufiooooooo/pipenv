@@ -8,10 +8,8 @@ import pytest
 from pipenv._compat import TemporaryDirectory, Path
 from pipenv.vendor import delegator
 from pipenv.vendor import requests
-from pipenv.vendor import six
 from pipenv.vendor import toml
 from pytest_pypi.app import prepare_packages as prepare_pypi_packages
-
 from vistir.compat import ResourceWarning
 
 

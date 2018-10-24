@@ -261,6 +261,6 @@ def is_quiet(threshold=-1):
     return PIPENV_VERBOSITY <= threshold
 
 
-PIPENV_SPINNER_FAIL_TEXT = "✘ {0}" if not PIPENV_HIDE_EMOJIS else "{0}"
+PIPENV_SPINNER_FAIL_TEXT = u"✘ {0}" if not PIPENV_HIDE_EMOJIS else "{0}"
 
-PIPENV_SPINNER_OK_TEXT = "✔ {0}" if not PIPENV_HIDE_EMOJIS else "{0}"
+PIPENV_SPINNER_OK_TEXT = u"✔ {0}" if not PIPENV_HIDE_EMOJIS else "{0}"
