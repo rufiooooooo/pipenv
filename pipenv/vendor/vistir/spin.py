@@ -136,6 +136,42 @@ class VistirSpinner(base_obj):
         )
         return fn
 
+    def _register_signal_handlers(self):
+        # SIGKILL cannot be caught or ignored, and the receiving
+        # process cannot perform any clean-up upon receiving this
+        # signal.
+        try:
+            if signal.SIGKILL in self._sigmap.keys():
+                raise ValueError(
+                    "Trying to set handler for SIGKILL signal. "
+                    "SIGKILL cannot be cought or ignored in POSIX systems."
+                )
+        except AttributeError:
+            pass
+
+        for sig, sig_handler in self._sigmap.items():
+            # A handler for a particular signal, once set, remains
+            # installed until it is explicitly reset. Store default
+            # signal handlers for subsequent reset at cleanup phase.
+            dfl_handler = signal.getsignal(sig)
+            self._dfl_sigmap[sig] = dfl_handler
+
+            # ``signal.SIG_DFL`` and ``signal.SIG_IGN`` are also valid
+            # signal handlers and are not callables.
+            if callable(sig_handler):
+                # ``signal.signal`` accepts handler function which is
+                # called with two arguments: signal number and the
+                # interrupted stack frame. ``functools.partial`` solves
+                # the problem of passing spinner instance into the handler
+                # function.
+                sig_handler = functools.partial(sig_handler, spinner=self)
+
+            signal.signal(sig, sig_handler)
+
+    def _reset_signal_handlers(self):
+        for sig, sig_handler in self._dfl_sigmap.items():
+            signal.signal(sig, sig_handler)
+
     @staticmethod
     def _hide_cursor():
         cursor.hide()

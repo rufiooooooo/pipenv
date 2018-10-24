@@ -203,7 +203,7 @@ def _create_subprocess(
                     else:
                         logger.debug(display_line)
                 if spinner:
-                    spinner.text = "{0} {1}".format(spinner_orig_text, display_line)
+                    spinner.text = fs_str("{0} {1}".format(spinner_orig_text, display_line))
                 continue
         try:
             c.wait()

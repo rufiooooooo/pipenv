@@ -686,7 +686,7 @@ def do_install_dependencies(
 
     If requirements is True, simply spits out a requirements format to stdout.
     """
-    import queue
+    from six.moves import queue
 
     def cleanup_procs(procs, concurrent):
         while not procs.empty():

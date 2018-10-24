@@ -50,4 +50,3 @@ cerberus==1.2
 git+https://github.com/sarugaku/passa.git@master#egg=passa
 cursor==1.2.0
 backports.functools_lru_cache==1.5
-boltons=18.0.1
