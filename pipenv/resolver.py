@@ -93,8 +93,8 @@ def main(pre, clear, verbose, system, requirements_dir, packages):
     if results:
         import traceback
         if isinstance(results, (Exception, traceback.types.TracebackType)):
-            sys.stderr.write(traceback.print_tb(results))
-            sys.stderr.write(sys.exc_value())
+            print(traceback.print_tb(results))
+            print(sys.exc_value())
         else:
             print(json.dumps(results))
     else:

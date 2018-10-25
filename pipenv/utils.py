@@ -384,6 +384,7 @@ def venv_resolve_deps(
                 sp.red.fail(environments.PIPENV_SPINNER_FAIL_TEXT.format(
                     "Locking Failed!"
                 ))
+                click_echo(c.out.strip(), err=True)
                 click_echo(c.err.strip(), err=True)
                 sys.exit(c.return_code)
             else:
