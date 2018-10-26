@@ -11,6 +11,7 @@ from pipenv.vendor import requests
 from pipenv.vendor import toml
 from pytest_pypi.app import prepare_packages as prepare_pypi_packages
 from vistir.compat import ResourceWarning
+from vistir.path import mkdir_p
 
 
 warnings.simplefilter("default", category=ResourceWarning)
@@ -89,6 +90,7 @@ def isolate(pathlib_tmpdir):
     # Create a directory to use as our home location.
     home_dir = os.path.join(str(pathlib_tmpdir), "home")
     os.makedirs(home_dir)
+    mkdir_p(os.path.join(home_dir, ".config", "git"))
     with open(os.path.join(home_dir, ".config", "git", "config"), "wb") as fp:
         fp.write(
             b"[user]\n\tname = pipenv\n\temail = pipenv@pipenv.org\n"
@@ -96,8 +98,8 @@ def isolate(pathlib_tmpdir):
     os.environ["GIT_CONFIG_NOSYSTEM"] = "1"
     os.environ["GIT_AUTHOR_NAME"] = "pipenv"
     os.environ["GIT_AUTHOR_EMAIL"] = "pipenv@pipenv.org"
+    mkdir_p(os.path.join(home_dir, ".virtualenvs"))
     os.environ["WORKON_HOME"] = os.path.join(home_dir, ".virtualenvs")
-
 
 
 class _PipenvInstance(object):
