@@ -97,6 +97,8 @@ def main():
     import warnings
     from pipenv.vendor.vistir.compat import ResourceWarning
     warnings.simplefilter("ignore", category=ResourceWarning)
+    from pipenv.vendor import colorama
+    colorama.init()
     os.environ["PIP_DISABLE_PIP_VERSION_CHECK"] = str("1")
     parser = get_parser()
     parsed, remaining = parser.parse_known_args()
