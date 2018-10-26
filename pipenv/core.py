@@ -2203,7 +2203,7 @@ def _launch_windows_subprocess(script):
     env_strings = [
         vistir.compat.to_native_string("{0}: {1}".format(k, v)) for k, v in os.environ.items()
     ]
-    click.echo(vistir.compat.to_native_string("\n".join(env_strings)))
+    click.echo(vistir.compat.to_native_string("\n".join(env_strings)), err=True)
 
     # Command not found, maybe this is a shell built-in?
     if not command:
