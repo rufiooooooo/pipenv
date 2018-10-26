@@ -2219,6 +2219,7 @@ def _launch_windows_subprocess(script):
 
 
 def do_run_nt(script):
+    os.environ = {k: vistir.compat.fs_str(val) for k, val in os.environ.items()}
     p = _launch_windows_subprocess(script)
     p.communicate()
     sys.exit(p.returncode)

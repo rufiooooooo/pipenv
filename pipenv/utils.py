@@ -335,7 +335,7 @@ def venv_resolve_deps(
     from .vendor.vistir.path import create_tracked_tempdir
     from .cmdparse import Script
     from .core import spinner
-    from .vendor.pexpect.exceptions import EOF
+    from .vendor.pexpect.exceptions import EOF, TIMEOUT
     from .vendor import delegator
     from . import resolver
     import json
@@ -374,11 +374,11 @@ def venv_resolve_deps(
             while True:
                 try:
                     result = c.expect(u"\n", timeout=-1)
-                except EOF:
+                except (EOF, TIMEOUT):
                     pass
                 if result is None:
                     break
-                _out = c.out
+                _out = c.subprocess.before
                 if _out is not None:
                     _out = to_native_string("{0}".format(_out))
                     out += _out
