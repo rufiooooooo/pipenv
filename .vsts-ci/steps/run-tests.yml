@@ -9,7 +9,7 @@ steps:
     subst T: "$env:TEMP"
     Write-Host "##vso[task.setvariable variable=TEMP]T:\"
     Write-Host "##vso[task.setvariable variable=TMP]T:\"
-    Get-ChildItem Env
+    Get-ChildItem Env:
     D:\.venv\Scripts\pipenv run pytest -n 4 -ra --ignore=pipenv\patched --ignore=pipenv\vendor --junitxml=test-results.xml tests
   displayName: Run integration tests
 
