@@ -183,6 +183,7 @@ class Command(object):
         # Use subprocess.
         if self.blocking:
             popen_kwargs = self._default_popen_kwargs.copy()
+            popen_kwargs["stdin"].close()
             del popen_kwargs["stdin"]
             popen_kwargs["universal_newlines"] = not binary
             if cwd:
