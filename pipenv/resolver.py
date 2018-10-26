@@ -3,7 +3,7 @@ import sys
 import json
 import logging
 
-os.environ["PIP_PYTHON_PATH"] = sys.executable
+os.environ["PIP_PYTHON_PATH"] = str(sys.executable)
 
 
 def _patch_path():
@@ -41,13 +41,13 @@ def handle_parsed_args(parsed):
     elif parsed.verbose > 0:
         logging.getLogger("notpip").setLevel(logging.INFO)
     if "PIPENV_PACKAGES" in os.environ:
-        parsed.packages += os.environ["PIPENV_PACKAGES"].strip().split("\n")
+        parsed.packages += os.environ.get("PIPENV_PACKAGES", "").strip().split("\n")
     return parsed
 
 
 def _main(pre, clear, verbose, system, requirements_dir, packages):
     os.environ["PIP_PYTHON_VERSION"] = ".".join([str(s) for s in sys.version_info[:3]])
-    os.environ["PIP_PYTHON_PATH"] = sys.executable
+    os.environ["PIP_PYTHON_PATH"] = str(sys.executable)
 
     from pipenv.utils import create_mirror_source, resolve_deps, replace_pypi_sources
 
@@ -97,7 +97,7 @@ def main():
     import warnings
     from pipenv.vendor.vistir.compat import ResourceWarning
     warnings.simplefilter("ignore", category=ResourceWarning)
-    os.environ["PIP_DISABLE_PIP_VERSION_CHECK"] = "1"
+    os.environ["PIP_DISABLE_PIP_VERSION_CHECK"] = str("1")
     parser = get_parser()
     parsed, remaining = parser.parse_known_args()
     # sys.argv = remaining
