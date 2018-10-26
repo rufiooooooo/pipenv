@@ -756,7 +756,6 @@ def do_install_dependencies(
 
     deps_list_bar = progress.bar(deps_list, width=32,
                                     label=INSTALL_LABEL if os.name != "nt" else "")
-
     indexes = []
     for dep in deps_list_bar:
         index = None
@@ -845,13 +844,14 @@ def do_install_dependencies(
                     # Return the subprocess' return code.
                     sys.exit(c.return_code)
                 else:
-                    click.echo(
-                        "{0} {1}{2}".format(
-                            crayons.green("Success installing"),
-                            crayons.green(dep.name),
-                            crayons.green("!"),
+                    if environments.is_verbose():
+                        click.echo(
+                            "{0} {1}{2}".format(
+                                crayons.green("Success installing"),
+                                crayons.green(dep.as_line(include_hashes=False)),
+                                crayons.green("!"),
+                            ),
                         )
-                    )
 
 
 def convert_three_to_python(three, python):
@@ -1014,9 +1014,6 @@ def do_lock(
         if dev_package in project.packages:
             dev_packages[dev_package] = project.packages[dev_package]
     # Resolve dev-package dependencies, with pip-tools.
-    pip_freeze = delegator.run(
-        "{0} freeze".format(escape_grouped_arguments(which_pip(allow_global=system)))
-    ).out
     sections = {
         "dev": {
             "packages": project.dev_packages,
@@ -1072,7 +1069,6 @@ def do_lock(
         # TODO: be smarter about this.
         vcs_reqs, vcs_lockfile = get_vcs_deps(
             project,
-            pip_freeze,
             which=which,
             clear=clear,
             pre=pre,
