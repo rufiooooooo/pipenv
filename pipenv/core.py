@@ -17,6 +17,7 @@ import warnings
 import six
 
 import urllib3.util as urllib3_util
+from functools import partial
 
 from .cmdparse import Script
 from .project import Project, SourceNotFound
@@ -110,7 +111,7 @@ def fix_utf8(text):
 
 
 @contextlib.contextmanager
-def spinner(text=None, nospin=None, spinner_name=None):
+def _spinner(text=None, nospin=None, spinner_name=None):
     if not text:
         text = "Running..."
     if not spinner_name:
@@ -123,6 +124,10 @@ def spinner(text=None, nospin=None, spinner_name=None):
             nospin=nospin
     ) as sp:
         yield sp
+
+
+spinner = partial(_spinner, text="Running...", nospin=environments.PIPENV_NOSPIN,
+                        spinner_name=environments.PIPENV_SPINNER)
 
 
 def which(command, location=None, allow_global=False):
@@ -322,9 +327,16 @@ def ensure_pipfile(validate=True, skip_requirements=False, system=False):
             )
             # Create a Pipfile…
             project.create_pipfile(python=python)
-            with spinner():
+            with spinner(text=vistir.compat.fs_str("Importing requirements..."),
+                    spinner_name=environments.PIPENV_SPINNER,
+                    nospin=environments.PIPENV_NOSPIN) as sp:
                 # Import requirements.txt.
-                import_requirements()
+                try:
+                    import_requirements()
+                except Exception:
+                    sp.fail(environments.PIPENV_SPINNER_FAIL_TEXT.format("Failed..."))
+                else:
+                    sp.ok(environments.PIPENV_SPINNER_FAIL_TEXT.format("Success!"))
             # Warn the user of side-effects.
             click.echo(
                 u"{0}: Your {1} now contains pinned versions, if your {2} did. \n"
@@ -467,14 +479,21 @@ def ensure_python(three=None, python=None):
                             crayons.normal(fix_utf8("…"), bold=True),
                         )
                     )
-                    with spinner():
+                    with spinner(text=vistir.compat.fs_str("Installing python..."),
+                                    spinner_name=environments.PIPENV_SPINNER,
+                                    nospin=environments.PIPENV_NOSPIN) as sp:
                         try:
                             c = pyenv.install(version)
                         except PyenvError as e:
-                            click.echo(fix_utf8("Something went wrong…"))
+                            sp.fail(environments.PIPENV_SPINNER_FAIL_TEXT.format(
+                                "Failed...")
+                            )
+                            click.echo(fix_utf8("Something went wrong…"), err=True)
                             click.echo(crayons.blue(e.err), err=True)
+                        else:
+                            environments.PIPENV_SPINNER_OK_TEXT.format("Success!")
                         # Print the results, in a beautiful blue…
-                        click.echo(crayons.blue(c.out), err=True)
+                            click.echo(crayons.blue(c.out), err=True)
                     # Find the newly installed Python, hopefully.
                     version = str(version)
                     path_to_python = find_a_system_python(version)

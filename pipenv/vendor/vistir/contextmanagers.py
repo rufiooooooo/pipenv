@@ -270,8 +270,8 @@ def open_file(link, session=None, stream=True):
                 result = raw if raw else resp
                 yield result
             finally:
-                result.close()
                 if raw:
                     conn = getattr(raw, "_connection")
                     if conn is not None:
                         conn.close()
+                result.close()
