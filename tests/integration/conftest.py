@@ -10,7 +10,7 @@ from pipenv.vendor import delegator
 from pipenv.vendor import requests
 from pipenv.vendor import toml
 from pytest_pypi.app import prepare_packages as prepare_pypi_packages
-from vistir.compat import ResourceWarning
+from vistir.compat import ResourceWarning, fs_str
 from vistir.path import mkdir_p
 
 
@@ -95,11 +95,11 @@ def isolate(pathlib_tmpdir):
         fp.write(
             b"[user]\n\tname = pipenv\n\temail = pipenv@pipenv.org\n"
         )
-    os.environ["GIT_CONFIG_NOSYSTEM"] = "1"
-    os.environ["GIT_AUTHOR_NAME"] = "pipenv"
-    os.environ["GIT_AUTHOR_EMAIL"] = "pipenv@pipenv.org"
+    os.environ["GIT_CONFIG_NOSYSTEM"] = fs_str("1")
+    os.environ["GIT_AUTHOR_NAME"] = fs_str("pipenv")
+    os.environ["GIT_AUTHOR_EMAIL"] = fs_str("pipenv@pipenv.org")
     mkdir_p(os.path.join(home_dir, ".virtualenvs"))
-    os.environ["WORKON_HOME"] = os.path.join(home_dir, ".virtualenvs")
+    os.environ["WORKON_HOME"] = fs_str(os.path.join(home_dir, ".virtualenvs"))
 
 
 class _PipenvInstance(object):
@@ -108,8 +108,8 @@ class _PipenvInstance(object):
         self.pypi = pypi
         self.original_umask = os.umask(0o007)
         self.original_dir = os.path.abspath(os.curdir)
-        os.environ["PIPENV_NOSPIN"] = "1"
-        os.environ["CI"] = "1"
+        os.environ["PIPENV_NOSPIN"] = fs_str("1")
+        os.environ["CI"] = fs_str("1")
         warnings.simplefilter("ignore", category=ResourceWarning)
         warnings.filterwarnings("ignore", category=ResourceWarning, message="unclosed.*<ssl.SSLSocket.*>")
         path = os.environ.get("PIPENV_PROJECT_DIR", None)
@@ -128,7 +128,7 @@ class _PipenvInstance(object):
         self.chdir = chdir
 
         if self.pypi:
-            os.environ['PIPENV_TEST_INDEX'] = '{0}/simple'.format(self.pypi.url)
+            os.environ['PIPENV_TEST_INDEX'] = fs_str('{0}/simple'.format(self.pypi.url))
 
         if pipfile:
             p_path = os.sep.join([self.path, 'Pipfile'])
@@ -139,10 +139,10 @@ class _PipenvInstance(object):
             self.pipfile_path = p_path
 
     def __enter__(self):
-        os.environ['PIPENV_DONT_USE_PYENV'] = '1'
-        os.environ['PIPENV_IGNORE_VIRTUALENVS'] = '1'
-        os.environ['PIPENV_VENV_IN_PROJECT'] = '1'
-        os.environ['PIPENV_NOSPIN'] = '1'
+        os.environ['PIPENV_DONT_USE_PYENV'] = fs_str('1')
+        os.environ['PIPENV_IGNORE_VIRTUALENVS'] = fs_str('1')
+        os.environ['PIPENV_VENV_IN_PROJECT'] = fs_str('1')
+        os.environ['PIPENV_NOSPIN'] = fs_str('1')
         if self.chdir:
             os.chdir(self.path)
         return self
@@ -162,11 +162,11 @@ class _PipenvInstance(object):
 
     def pipenv(self, cmd, block=True):
         if self.pipfile_path:
-            os.environ['PIPENV_PIPFILE'] = self.pipfile_path
+            os.environ['PIPENV_PIPFILE'] = fs_str(self.pipfile_path)
         # a bit of a hack to make sure the virtualenv is created
 
         with TemporaryDirectory(prefix='pipenv-', suffix='-cache') as tempdir:
-            os.environ['PIPENV_CACHE_DIR'] = tempdir.name
+            os.environ['PIPENV_CACHE_DIR'] = fs_str(tempdir.name)
             c = delegator.run('pipenv {0}'.format(cmd), block=block)
             if 'PIPENV_CACHE_DIR' in os.environ:
                 del os.environ['PIPENV_CACHE_DIR']
@@ -211,11 +211,11 @@ def PipenvInstance():
 def pip_src_dir(request):
     old_src_dir = os.environ.get('PIP_SRC', '')
     new_src_dir = TemporaryDirectory(prefix='pipenv-', suffix='-testsrc')
-    os.environ['PIP_SRC'] = new_src_dir.name
+    os.environ['PIP_SRC'] = fs_str(new_src_dir.name)
 
     def finalize():
         new_src_dir.cleanup()
-        os.environ['PIP_SRC'] = old_src_dir
+        os.environ['PIP_SRC'] = fs_str(old_src_dir)
 
     request.addfinalizer(finalize)
     return request
