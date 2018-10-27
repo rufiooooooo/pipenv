@@ -2213,10 +2213,6 @@ def _launch_windows_subprocess(script):
 
     command = system_which(script.command)
     options = {"universal_newlines": True}
-    env_strings = [
-        vistir.compat.to_native_string("{0}: {1}".format(k, v)) for k, v in os.environ.items()
-    ]
-    click.echo(vistir.compat.to_native_string("\n".join(env_strings)), err=True)
 
     # Command not found, maybe this is a shell built-in?
     if not command:
