@@ -383,11 +383,11 @@ def venv_resolve_deps(
                     _out = to_native_string("{0}".format(_out))
                     out += _out
                     sp.text = to_native_string("Locking... {0}".format(_out[:100]))
-            if environments.is_verbose():
-                if _out is not None:
-                    sp._hide_cursor()
-                    sp.write(_out.rstrip())
-                    sp._show_cursor()
+                if environments.is_verbose():
+                    if _out is not None:
+                        sp._hide_cursor()
+                        sp.write(_out.rstrip())
+                        sp._show_cursor()
             c.block()
             if c.return_code != 0:
                 sp.red.fail(environments.PIPENV_SPINNER_FAIL_TEXT.format(
