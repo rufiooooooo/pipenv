@@ -5,7 +5,6 @@ import os
 import signal
 import sys
 
-import colorama
 import cursor
 import six
 
@@ -32,7 +31,6 @@ CLEAR_LINE = chr(27) + "[K"
 
 class DummySpinner(object):
     def __init__(self, text="", **kwargs):
-        colorama.init()
         self.text = to_native_string(text)
         self.stdout = kwargs.get("stdout", sys.stdout)
         self.stderr = kwargs.get("stderr", sys.stderr)
@@ -114,6 +112,7 @@ class VistirSpinner(base_obj):
         """
 
         self.handler = handler
+        import colorama
         colorama.init()
         sigmap = {}
         if handler:

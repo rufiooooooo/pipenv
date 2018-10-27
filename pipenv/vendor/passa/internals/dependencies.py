@@ -154,7 +154,6 @@ def _get_dependencies_from_json(ireq, sources):
                 return dependencies
         except Exception as e:
             print("unable to read dependencies via {0} ({1})".format(url, e))
-    session.close()
     return
 
 
@@ -216,7 +215,7 @@ def _read_requires_python(metadata):
 
 
 def _get_dependencies_from_pip(ireq, sources):
-    """Retrieves dependencies for the requirement from pip internals.
+    """Retrieves dependencies for the requirement from pipenv.patched.notpip internals.
 
     The current strategy is to try the followings in order, returning the
     first successful result.
