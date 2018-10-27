@@ -212,7 +212,7 @@ def actually_resolve_deps(
     req_dir=None,
 ):
     from .vendor.pip_shims.shims import (
-        basecommand, parse_requirements, DistributionNotFound
+        Command, parse_requirements, DistributionNotFound
     )
     from .vendor.requests.exceptions import HTTPError
     from pipenv.patched.piptools.resolver import Resolver
@@ -223,7 +223,7 @@ def actually_resolve_deps(
     from .vendor.requirementslib.models.requirements import Requirement
     from .vendor.vistir.path import create_tracked_tempdir, create_tracked_tempfile
 
-    class PipCommand(basecommand.Command):
+    class PipCommand(Command):
         """Needed for pip-tools."""
 
         name = "PipCommand"

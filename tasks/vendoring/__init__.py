@@ -332,6 +332,7 @@ def post_install_cleanup(ctx, vendor_dir):
     # Cleanup setuptools unneeded parts
     drop_dir(vendor_dir / 'bin')
     drop_dir(vendor_dir / 'tests')
+    remove_all(vendor_dir.glob('toml.py'))
 
 
 def vendor(ctx, vendor_dir, package=None, rewrite=True):
