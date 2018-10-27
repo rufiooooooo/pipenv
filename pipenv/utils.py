@@ -338,6 +338,7 @@ def venv_resolve_deps(
     from .vendor.pexpect.exceptions import EOF, TIMEOUT
     from .vendor import delegator
     from . import resolver
+    from ._compat import decode_output
     import json
 
     if not deps:
@@ -380,9 +381,9 @@ def venv_resolve_deps(
                     break
                 _out = c.subprocess.before
                 if _out is not None:
-                    _out = to_native_string("{0}".format(_out))
+                    _out = decode_output("{0}".format(_out))
                     out += _out
-                    sp.text = to_native_string("Locking... {0}".format(_out[:100]))
+                    sp.text = to_native_string("{0}".format(_out[:100]))
                 if environments.is_verbose():
                     if _out is not None:
                         sp._hide_cursor()

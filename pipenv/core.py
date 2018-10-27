@@ -106,9 +106,13 @@ UNICODE_TO_ASCII_TRANSLATION_MAP = {
 def fix_utf8(text):
     if not isinstance(text, six.string_types):
         return text
-    if six.PY2:
-        text = unicode.translate(vistir.misc.to_text(text), UNICODE_TO_ASCII_TRANSLATION_MAP)
-    return u"{0}".format(text)
+    from ._compat import decode_output
+    try:
+        text = decode_output(text)
+    except UnicodeDecodeError:
+        if six.PY2:
+            text = unicode.translate(vistir.misc.to_text(text), UNICODE_TO_ASCII_TRANSLATION_MAP)
+    return text
 
 
 @contextlib.contextmanager
