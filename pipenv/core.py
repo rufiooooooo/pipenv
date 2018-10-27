@@ -231,7 +231,7 @@ def cleanup_virtualenv(bare=True):
 
 def import_requirements(r=None, dev=False):
     from .patched.notpip._vendor import requests as pip_requests
-    from .patched.notpip._internal.req.req_file import parse_requirements
+    from .vendor.pip_shims.shims import parse_requirements
 
     # Parse requirements.txt file with Pip's parser.
     # Pip requires a `PipSession` which is a subclass of requests.Session.
@@ -1755,7 +1755,7 @@ def do_install(
     selective_upgrade=False,
 ):
     from .environments import PIPENV_VIRTUALENV, PIPENV_USE_SYSTEM
-    from notpip._internal.exceptions import PipError
+    from .vendor.pip_shims.shims import PipError
 
     requirements_directory = vistir.path.create_tracked_tempdir(
         suffix="-requirements", prefix="pipenv-"
