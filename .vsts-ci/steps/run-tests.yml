@@ -11,7 +11,6 @@ steps:
     $env:TEMP='T:\'
     Write-Host "##vso[task.setvariable variable=TMP]T:\"
     $env:TEMP='T:\'
-    Get-ChildItem Env:
     D:\.venv\Scripts\pipenv run pytest -n 4 -ra --ignore=pipenv\patched --ignore=pipenv\vendor --junitxml=test-results.xml tests
   displayName: Run integration tests
 
