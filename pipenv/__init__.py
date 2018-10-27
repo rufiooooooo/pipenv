@@ -24,9 +24,10 @@ warnings.filterwarnings("ignore", category=DependencyWarning)
 warnings.filterwarnings("ignore", category=ResourceWarning)
 
 if sys.version_info >= (3, 1) and sys.version_info <= (3, 6):
-    import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf8')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf8')
+    if sys.stdout.isatty() and sys.stderr.isatty():
+        import io
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf8')
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf8')
 
 os.environ["PIP_DISABLE_PIP_VERSION_CHECK"] = fs_str("1")
 os.environ["PIP_SHIMS_BASE_MODULE"] = fs_str("pipenv.patched.notpip")

@@ -320,6 +320,15 @@ DEFAULT_ENCODING = getpreferredencoding()
 # From https://github.com/CarlFK/veyepar/blob/5c5de47/dj/scripts/fixunicode.py
 # MIT LIcensed, thanks Carl!
 def force_encoding():
+    try:
+        stdout_isatty = sys.stdout.isatty
+        stderr_isatty = sys.stderr.isatty
+    except AttributeError:
+        return sys.stdout.encoding, sys.stderr.encoding
+    else:
+        if not (stdout_isatty() and stderr_isatty()):
+            return sys.stdout.encoding, sys.stderr.encoding
+    if not sys.stdout.isatty()
     stdout_encoding = sys.stdout.encoding
     stderr_encoding = sys.stderr.encoding
     if stdout_encoding.lower() != "utf-8" or stderr_encoding.lower() != "utf-8":
