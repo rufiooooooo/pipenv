@@ -328,9 +328,10 @@ def force_encoding():
     else:
         if not (stdout_isatty() and stderr_isatty()):
             return sys.stdout.encoding, sys.stderr.encoding
-    if not sys.stdout.isatty()
-    stdout_encoding = sys.stdout.encoding
-    stderr_encoding = sys.stderr.encoding
+    if not sys.stdout.isatty():
+        stdout_encoding = sys.stdout.encoding
+        stderr_encoding = sys.stderr.encoding
+        return stdout_encoding, stderr.encoding
     if stdout_encoding.lower() != "utf-8" or stderr_encoding.lower() != "utf-8":
 
         from ctypes import pythonapi, py_object, c_char_p
