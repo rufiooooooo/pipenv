@@ -324,59 +324,43 @@ def force_encoding():
         stdout_isatty = sys.stdout.isatty
         stderr_isatty = sys.stderr.isatty
     except AttributeError:
-        return sys.stdout.encoding, sys.stderr.encoding
+        return DEFAULT_ENCODING, DEFAULT_ENCODING
     else:
         if not (stdout_isatty() and stderr_isatty()):
-            return sys.stdout.encoding, sys.stderr.encoding
-    if not sys.stdout.isatty():
-        stdout_encoding = sys.stdout.encoding
-        stderr_encoding = sys.stderr.encoding
-        return stdout_encoding, stderr.encoding
+            return DEFAULT_ENCODING, DEFAULT_ENCODING
+    stdout_encoding = sys.stdout.encoding
+    stderr_encoding = sys.stderr.encoding
+    if sys.platform == "win32" and sys.version_info >= (3, 1):
+        return DEFAULT_ENCODING, DEFAULT_ENCODING
     if stdout_encoding.lower() != "utf-8" or stderr_encoding.lower() != "utf-8":
 
         from ctypes import pythonapi, py_object, c_char_p
         try:
             PyFile_SetEncoding = pythonapi.PyFile_SetEncoding
         except AttributeError:
-            import io
-            sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf8')
-            sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf8')
-            return 'utf-8', 'utf-8'
-        PyFile_SetEncoding.argtypes = (py_object, c_char_p)
-
-        if stdout_encoding.lower() != "utf-8":
-            try:
-                was_set = PyFile_SetEncoding(sys.stdout, "utf-8")
-            except OSError:
-                was_set = False
-            if not was_set:
+            return DEFAULT_ENCODING, DEFAULT_ENCODING
+        else:
+            PyFile_SetEncoding.argtypes = (py_object, c_char_p)
+            if stdout_encoding.lower() != "utf-8":
                 try:
-                    was_set = PyFile_SetEncoding(sys.stdout, DEFAULT_ENCODING)
+                    was_set = PyFile_SetEncoding(sys.stdout, "utf-8")
                 except OSError:
                     was_set = False
                 if not was_set:
-                    stdout_encoding = sys.stdout.encoding
-                else:
                     stdout_encoding = DEFAULT_ENCODING
-            else:
-                stdout_encoding = "utf-8"
+                else:
+                    stdout_encoding = "utf-8"
 
-        if stderr_encoding.lower() != "utf-8":
-            try:
-                was_set = PyFile_SetEncoding(sys.stderr, "utf-8")
-            except OSError:
-                was_set = False
-            if not was_set:
+            if stderr_encoding.lower() != "utf-8":
                 try:
-                    was_set = PyFile_SetEncoding(sys.stderr, DEFAULT_ENCODING)
+                    was_set = PyFile_SetEncoding(sys.stderr, "utf-8")
                 except OSError:
                     was_set = False
                 if not was_set:
-                    stderr_encoding = sys.stderr.encoding
-                else:
                     stderr_encoding = DEFAULT_ENCODING
-            else:
-                stderr_encoding = "utf-8"
+                else:
+                    stderr_encoding = "utf-8"
+
     return stdout_encoding, stderr_encoding
 
 
@@ -387,8 +371,8 @@ def decode_output(output):
     if not isinstance(output, six.string_types):
         return output
     try:
-        output = output.encode(ERR_ENCODING)
+        output = output.encode(DEFAULT_ENCODING)
     except AttributeError:
         pass
-    output = output.decode(ERR_ENCODING)
+    output = output.decode(DEFAULT_ENCODING)
     return output
