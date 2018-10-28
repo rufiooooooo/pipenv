@@ -6,7 +6,7 @@ import sys as _sys
 import warnings as _warnings
 from tempfile import mkdtemp
 
-from pipenv.vendor.vistir.compat import TemporaryDirectory as _ TemporaryDirectory
+from pipenv.vendor.vistir.compat import TemporaryDirectory as _TemporaryDirectory
 from pipenv.vendor.vistir.path import ensure_mkdir_p
 
 
@@ -21,7 +21,7 @@ def _get_src_dir():
     return _os.path.join(_os.getcwd(), "src")
 
 
-class TemporaryDirectory(_ TemporaryDirectory):
+class TemporaryDirectory(_TemporaryDirectory):
     """Create and return a temporary directory.  This has the same
     behavior as mkdtemp but can be used as a context manager.  For
     example:
