@@ -68,7 +68,7 @@ def pytest_runtest_setup(item):
         pytest.skip('requires github ssh')
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def pathlib_tmpdir(request, tmpdir):
     yield Path(str(tmpdir))
     try:
@@ -211,7 +211,7 @@ def PipenvInstance():
     yield _PipenvInstance
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(autouse=True)
 def pip_src_dir(request, pathlib_tmpdir):
     old_src_dir = os.environ.get('PIP_SRC', '')
     os.environ['PIP_SRC'] = pathlib_tmpdir.as_posix()
