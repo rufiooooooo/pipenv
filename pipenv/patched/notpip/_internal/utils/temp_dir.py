@@ -38,6 +38,8 @@ class TempDirectory(TemporaryDirectory):
     def __init__(self, path=None, delete=None, kind="temp"):
         if not path:
             super(TempDirectory, self).__init__(prefix="pip-{0}".format(kind))
+        else:
+            self.name = path
 
         if path is None and delete is None:
             # If we were not given an explicit directory, and we were not given
