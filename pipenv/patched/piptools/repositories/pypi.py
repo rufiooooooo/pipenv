@@ -295,7 +295,7 @@ class PyPIRepository(BaseRepository):
                 resolver = PipResolver(**resolver_kwargs)
                 resolver.require_hashes = False
                 results = resolver._resolve_one(reqset, ireq)
-                reqset.cleanup_files()
+
 
         if ireq.editable and (ireq.source_dir and os.path.exists(ireq.source_dir)):
             # Collect setup_requires info from local eggs.
@@ -380,6 +380,12 @@ class PyPIRepository(BaseRepository):
                 ireq.req.marker = marker_to_add
 
         results = set(results) if results else set()
+        cleanup_fn = getattr(reqset, "cleanup_files", None)
+        if cleanup_fn is not None:
+            try:
+                cleanup_fn()
+            except OSError:
+                pass
         return results, ireq
 
     def get_legacy_dependencies(self, ireq):

@@ -211,16 +211,12 @@ def PipenvInstance():
     yield _PipenvInstance
 
 
-@pytest.fixture(autouse=True)
-def pip_src_dir(request, tmpdir):
+@pytest.fixture(scope="session")
+def pip_src_dir(request, pathlib_tmpdir):
     old_src_dir = os.environ.get('PIP_SRC', '')
-    os.environ['PIP_SRC'] = tmpdir.strpath
+    os.environ['PIP_SRC'] = pathlib_tmpdir.as_posix()
 
     def finalize():
-        try:
-            tmpdir.remove(ignore_errors=True)
-        except Exception:
-            pass
         os.environ['PIP_SRC'] = fs_str(old_src_dir)
 
     request.addfinalizer(finalize)
