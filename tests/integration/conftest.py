@@ -71,7 +71,10 @@ def pytest_runtest_setup(item):
 @pytest.yield_fixture
 def pathlib_tmpdir(request, tmpdir):
     yield Path(str(tmpdir))
-    tmpdir.remove(ignore_errors=True)
+    try:
+        tmpdir.remove(ignore_errors=True)
+    except Exception:
+        pass
 
 
 # Borrowed from pip's test runner filesystem isolation
@@ -208,13 +211,16 @@ def PipenvInstance():
     yield _PipenvInstance
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(autouse=True)
 def pip_src_dir(request, tmpdir):
     old_src_dir = os.environ.get('PIP_SRC', '')
     os.environ['PIP_SRC'] = tmpdir.strpath
 
     def finalize():
-        tmpdir.remove(ignore_errors=True)
+        try:
+            tmpdir.remove(ignore_errors=True)
+        except Exception:
+            pass
         os.environ['PIP_SRC'] = fs_str(old_src_dir)
 
     request.addfinalizer(finalize)

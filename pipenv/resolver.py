@@ -25,7 +25,7 @@ def get_parser():
     parser.add_argument("--system", action="store_true", default=False)
     parser.add_argument("--requirements-dir", metavar="requirements_dir", action="store",
                             default=os.environ.get("PIPENV_REQ_DIR"))
-    parser.add_requirement("--src-dir", metavar="src_dir", action="store",
+    parser.add_argument("--src-dir", metavar="src_dir", action="store",
                                 default=os.environ.get("PIP_SRC",
                                     os.environ.get("PIP_SRC_DIR", None)))
     parser.add_argument("packages", nargs="*")
