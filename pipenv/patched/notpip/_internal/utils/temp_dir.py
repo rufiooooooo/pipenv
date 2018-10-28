@@ -5,11 +5,12 @@ import os.path
 import tempfile
 
 from pipenv.patched.notpip._internal.utils.misc import rmtree
+from pipenv.vendor.vistir.compat import TemporaryDirectory
 
 logger = logging.getLogger(__name__)
 
 
-class TempDirectory(object):
+class TempDirectory(TemporaryDirectory):
     """Helper class that owns and cleans up a temporary directory.
 
     This class can be used as a context manager or as an OO representation of a
@@ -35,22 +36,30 @@ class TempDirectory(object):
     """
 
     def __init__(self, path=None, delete=None, kind="temp"):
-        super(TempDirectory, self).__init__()
+        if not path:
+            super(TempDirectory, self).__init__(prefix="pip-{0}".format(kind))
 
         if path is None and delete is None:
             # If we were not given an explicit directory, and we were not given
             # an explicit delete option, then we'll default to deleting.
             delete = True
 
-        self.path = path
+        self.path = os.path.realpath(self.name)
         self.delete = delete
         self.kind = kind
+        if not self.delete:
+            self._finalizer = None
+
+    def cleanup(self):
+        if self.delete:
+            super(TempDirectory, self).cleanup()
+        else:
+            pass
 
     def __repr__(self):
         return "<{} {!r}>".format(self.__class__.__name__, self.path)
 
     def __enter__(self):
-        self.create()
         return self
 
     def __exit__(self, exc, value, tb):
@@ -73,10 +82,3 @@ class TempDirectory(object):
             tempfile.mkdtemp(prefix="pip-{}-".format(self.kind))
         )
         logger.debug("Created temporary directory: {}".format(self.path))
-
-    def cleanup(self):
-        """Remove the temporary directory created and reset state
-        """
-        if self.path is not None and os.path.exists(self.path):
-            rmtree(self.path)
-        self.path = None
