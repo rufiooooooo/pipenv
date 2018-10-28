@@ -15,7 +15,6 @@ import pipfile
 import pipfile.api
 import six
 import vistir
-import virtualenv as _virtualenv
 import toml
 
 from .cmdparse import Script
@@ -988,6 +987,28 @@ class Project(object):
     def env_paths(self):
         location = self.virtualenv_location if self.virtualenv_location else sys.prefix
         prefix = vistir.compat.Path(location)
+        import importlib
+        try:
+            _virtualenv = importlib.import_module("virtualenv")
+        except ImportError:
+            with vistir.contextmanagers.temp_path():
+                import sysconfig
+                if getattr(sys, "real_prefix", None):
+                    scheme = sysconfig._get_default_scheme()
+                    if not scheme:
+                        scheme = "posix_prefix" if not sys.platform == "win32" else "nt"
+                    config = {
+                        "base": prefix,
+                        "installed_base": prefix,
+                        "platbase": prefix,
+                        "installed_platbase": prefix
+                    }
+                    config.update(self._pyversion)
+                    sys.path = [
+                        os.path.join(sysconfig._INSTALL_SCHEMES[scheme]["purelib"], "site-packages"),
+                    ] + sys.path
+                    six.reload_module(importlib)
+                    _virtualenv = importlib.import_module("virtualenv")
         home, lib, inc, bin_ = _virtualenv.path_locations(prefix)
         paths = {
             "lib": lib,
