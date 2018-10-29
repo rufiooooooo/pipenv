@@ -1252,11 +1252,12 @@ def is_virtual_environment(path):
 
 @contextmanager
 def locked_repository(requirement):
-    from .vendor.vistir.path import create_tracked_tempdi
+    from .vendor.vistir.path import create_tracked_tempdir
     if not requirement.is_vcs:
         return
     original_base = os.environ.pop("PIP_SHIMS_BASE_MODULE", None)
     os.environ["PIP_SHIMS_BASE_MODULE"] = fs_str("pipenv.patched.notpip")
+    src_dir = create_tracked_tempdir(prefix="pipenv-", suffix="-src")
     try:
         with requirement.req.locked_vcs_repo(src_dir=src_dir) as repo:
             yield repo
