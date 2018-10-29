@@ -122,7 +122,7 @@ index 08dabe1..480ad1e 100644
          else:
              return self.repository.find_best_match(ireq, prereleases)
 diff --git a/pipenv/patched/piptools/repositories/pypi.py b/pipenv/patched/piptools/repositories/pypi.py
-index bf69803..8e765dc 100644
+index bf69803..31b85b9 100644
 --- a/pipenv/patched/piptools/repositories/pypi.py
 +++ b/pipenv/patched/piptools/repositories/pypi.py
 @@ -1,7 +1,7 @@
@@ -134,7 +134,7 @@ index bf69803..8e765dc 100644
  import hashlib
  import os
  from contextlib import contextmanager
-@@ -15,13 +15,23 @@ from .._compat import (
+@@ -15,13 +15,22 @@ from .._compat import (
      Wheel,
      FAVORITE_HASH,
      TemporaryDirectory,
@@ -143,11 +143,10 @@ index bf69803..8e765dc 100644
 +    InstallRequirement,
 +    SafeFileCache
  )
-+os.environ["PIP_SHIMS_BASE_MODULE"] = str("notpip")
++os.environ["PIP_SHIMS_BASE_MODULE"] = str("pip")
 +from pip_shims.shims import do_import, VcsSupport, WheelCache
 +from packaging.requirements import Requirement
 +from packaging.specifiers import SpecifierSet, Specifier
-+from packaging.markers import Op, Value, Variable, Marker
 +InstallationError = do_import(("exceptions.InstallationError", "7.0", "9999"))
 +from pip._internal.resolve import Resolver as PipResolver
 +
@@ -158,11 +157,11 @@ index bf69803..8e765dc 100644
 -from ..utils import (fs_str, is_pinned_requirement, lookup_table,
 -                     make_install_requirement)
 +from ..utils import (fs_str, is_pinned_requirement, lookup_table, dedup,
-+                     make_install_requirement, clean_requires_python)
++                        make_install_requirement, clean_requires_python)
  from .base import BaseRepository
  
  try:
-@@ -31,10 +41,44 @@ except ImportError:
+@@ -31,10 +40,44 @@ except ImportError:
      def RequirementTracker():
          yield
  
@@ -211,7 +210,7 @@ index bf69803..8e765dc 100644
  
  
  class PyPIRepository(BaseRepository):
-@@ -46,8 +90,9 @@ class PyPIRepository(BaseRepository):
+@@ -46,8 +89,9 @@ class PyPIRepository(BaseRepository):
      config), but any other PyPI mirror can be used if index_urls is
      changed/configured on the Finder.
      """
@@ -222,7 +221,7 @@ index bf69803..8e765dc 100644
          self.pip_options = pip_options
  
          index_urls = [pip_options.index_url] + pip_options.extra_index_urls
-@@ -73,6 +118,10 @@ class PyPIRepository(BaseRepository):
+@@ -73,6 +117,10 @@ class PyPIRepository(BaseRepository):
          # of all secondary dependencies for the given requirement, so we
          # only have to go to disk once for each requirement
          self._dependencies_cache = {}
@@ -233,7 +232,7 @@ index bf69803..8e765dc 100644
  
          # Setup file paths
          self.freshen_build_caches()
-@@ -113,10 +162,13 @@ class PyPIRepository(BaseRepository):
+@@ -113,10 +161,13 @@ class PyPIRepository(BaseRepository):
          if ireq.editable:
              return ireq  # return itself as the best match
  
@@ -249,7 +248,7 @@ index bf69803..8e765dc 100644
  
          # Reuses pip's internal candidate sort key to sort
          matching_candidates = [candidates_by_version[ver] for ver in matching_versions]
-@@ -126,25 +178,86 @@ class PyPIRepository(BaseRepository):
+@@ -126,25 +177,87 @@ class PyPIRepository(BaseRepository):
  
          # Turn the candidate into a pinned InstallRequirement
          return make_install_requirement(
@@ -321,6 +320,7 @@ index bf69803..8e765dc 100644
 +        dist = None
 +        ireq.isolated = False
 +        ireq._wheel_cache = wheel_cache
++
          try:
              from pip._internal.operations.prepare import RequirementPreparer
 -            from pip._internal.resolve import Resolver as PipResolver
@@ -360,7 +360,7 @@ index bf69803..8e765dc 100644
              }
              resolver = None
              preparer = None
-@@ -177,15 +291,104 @@ class PyPIRepository(BaseRepository):
+@@ -177,15 +291,109 @@ class PyPIRepository(BaseRepository):
                  resolver_kwargs['preparer'] = preparer
                  reqset = RequirementSet()
                  ireq.is_direct = True
@@ -372,8 +372,18 @@ index bf69803..8e765dc 100644
 -                reqset.cleanup_files()
  
 -        return set(results)
- 
--    def get_dependencies(self, ireq):
++        cleanup_fn = getattr(reqset, "cleanup_files", None)
++        if cleanup_fn is not None:
++            try:
++                cleanup_fn()
++            except OSError:
++                pass
++
++        if ireq.editable and (not ireq.source_dir or not os.path.exists(ireq.source_dir)):
++            if ireq.editable:
++                self._source_dir = TemporaryDirectory(fs_str("source"))
++                ireq.ensure_has_source_dir(self.source_dir)
++
 +        if ireq.editable and (ireq.source_dir and os.path.exists(ireq.source_dir)):
 +            # Collect setup_requires info from local eggs.
 +            # Do this after we call the preparer on these reqs to make sure their
@@ -401,7 +411,8 @@ index bf69803..8e765dc 100644
 +                    ireq.req = dist.as_requirement() if dist else None
 +                except (ValueError, TypeError) as e:
 +                    pass
-+
+ 
+-    def get_dependencies(self, ireq):
 +            # Convert setup_requires dict into a somewhat usable form.
 +            if setup_requires:
 +                for section in setup_requires:
@@ -457,19 +468,13 @@ index bf69803..8e765dc 100644
 +                ireq.req.marker = marker_to_add
 +
 +        results = set(results) if results else set()
-+        cleanup_fn = getattr(reqset, "cleanup_files", None)
-+        if cleanup_fn is not None:
-+            try:
-+                cleanup_fn()
-+            except OSError:
-+                pass
 +        return results, ireq
 +
 +    def get_legacy_dependencies(self, ireq):
          """
          Given a pinned or an editable InstallRequirement, returns a set of
          dependencies (also InstallRequirements, but not necessarily pinned).
-@@ -200,6 +403,7 @@ class PyPIRepository(BaseRepository):
+@@ -200,6 +408,7 @@ class PyPIRepository(BaseRepository):
                  # If a download_dir is passed, pip will  unnecessarely
                  # archive the entire source directory
                  download_dir = None
@@ -477,7 +482,7 @@ index bf69803..8e765dc 100644
              elif ireq.link and not ireq.link.is_artifact:
                  # No download_dir for VCS sources.  This also works around pip
                  # using git-checkout-index, which gets rid of the .git dir.
-@@ -214,7 +418,8 @@ class PyPIRepository(BaseRepository):
+@@ -214,7 +423,8 @@ class PyPIRepository(BaseRepository):
              wheel_cache = WheelCache(CACHE_DIR, self.pip_options.format_control)
              prev_tracker = os.environ.get('PIP_REQ_TRACKER')
              try:
@@ -487,7 +492,7 @@ index bf69803..8e765dc 100644
              finally:
                  if 'PIP_REQ_TRACKER' in os.environ:
                      if prev_tracker:
-@@ -236,6 +441,10 @@ class PyPIRepository(BaseRepository):
+@@ -236,6 +446,10 @@ class PyPIRepository(BaseRepository):
          if ireq.editable:
              return set()
  
@@ -498,7 +503,7 @@ index bf69803..8e765dc 100644
          if not is_pinned_requirement(ireq):
              raise TypeError(
                  "Expected pinned requirement, got {}".format(ireq))
-@@ -243,24 +452,22 @@ class PyPIRepository(BaseRepository):
+@@ -243,24 +457,22 @@ class PyPIRepository(BaseRepository):
          # We need to get all of the candidates that match our current version
          # pin, these will represent all of the files that could possibly
          # satisfy this constraint.

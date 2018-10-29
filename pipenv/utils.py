@@ -345,12 +345,6 @@ def venv_resolve_deps(
         return []
 
     req_dir = create_tracked_tempdir(prefix="pipenv", suffix="requirements")
-    src_dir = os.environ.get("PIP_SRC", os.environ.get("PIP_SRC_DIR",
-                                                        project.virtualenv_src_location))
-    if not src_dir:
-        src_dir = create_tracked_tempdir(prefix="pipenv-", suffix="-src")
-    if not os.environ.get("PIP_SRC"):
-        os.environ["PIP_SRC"] = src_dir
     cmd = [
         which("python", allow_global=allow_global),
         Path(resolver.__file__.rstrip("co")).as_posix()
@@ -361,7 +355,6 @@ def venv_resolve_deps(
         cmd.append("--clear")
     if allow_global:
         cmd.append("--system")
-    cmd.extend(["--src", src_dir])
     with temp_environ():
         os.environ = {fs_str(k): fs_str(val) for k, val in os.environ.items()}
         os.environ["PIPENV_PACKAGES"] = str("\n".join(deps))
@@ -370,8 +363,6 @@ def venv_resolve_deps(
         os.environ["PIPENV_VERBOSITY"] = str(environments.PIPENV_VERBOSITY)
         os.environ["PIPENV_REQ_DIR"] = fs_str(req_dir)
         os.environ["PIP_NO_INPUT"] = fs_str("1")
-        if not os.environ.get("PIP_SRC"):
-            os.environ["PIP_SRC"] = fs_str(src_dir)
         out = to_native_string("")
         EOF.__module__ = "pexpect.exceptions"
         with spinner(text=fs_str("Locking..."), spinner_name=environments.PIPENV_SPINNER,
@@ -1125,13 +1116,6 @@ def get_vcs_deps(
         packages = getattr(project, section)
     except AttributeError:
         return [], []
-    if os.environ.get("PIP_SRC"):
-        src_dir = Path(
-            os.environ.get("PIP_SRC", os.path.join(project.virtualenv_src_location))
-        )
-        src_dir.mkdir(mode=0o777, exist_ok=True)
-    else:
-        src_dir = create_tracked_tempdir(prefix="pipenv-lock-dir")
     for pkg_name, pkg_pipfile in packages.items():
         requirement = Requirement.from_pipfile(pkg_name, pkg_pipfile)
         name = requirement.normalized_name
@@ -1268,8 +1252,7 @@ def is_virtual_environment(path):
 
 @contextmanager
 def locked_repository(requirement):
-    from .vendor.vistir.path import create_tracked_tempdir
-    src_dir = create_tracked_tempdir(prefix="pipenv-src")
+    from .vendor.vistir.path import create_tracked_tempdi
     if not requirement.is_vcs:
         return
     original_base = os.environ.pop("PIP_SHIMS_BASE_MODULE", None)

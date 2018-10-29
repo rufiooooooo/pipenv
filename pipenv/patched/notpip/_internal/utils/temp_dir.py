@@ -5,13 +5,13 @@ import os.path
 import tempfile
 import warnings
 
-from pipenv.vendor.vistir.path import rmtree
-from pipenv.vendor.vistir.compat import TemporaryDirectory, finalize
+from pipenv.patched.notpip._internal.utils.misc import rmtree
+from pipenv.vendor.vistir.compat import finalize, ResourceWarning
 
 logger = logging.getLogger(__name__)
 
 
-class TempDirectory(TemporaryDirectory):
+class TempDirectory(object):
     """Helper class that owns and cleans up a temporary directory.
 
     This class can be used as a context manager or as an OO representation of a
@@ -36,42 +36,35 @@ class TempDirectory(TemporaryDirectory):
     context the created directory is deleted.
     """
 
-    def __init__(self, path=None, delete=None, kind="temp", **kwargs):
+    def __init__(self, path=None, delete=None, kind="temp"):
+        super(TempDirectory, self).__init__()
+
         if path is None and delete is None:
             # If we were not given an explicit directory, and we were not given
             # an explicit delete option, then we'll default to deleting.
             delete = True
-        if not path:
-            super(TempDirectory, self).__init__(prefix="pip-{0}".format(kind))
-        else:
-            self.name = path
 
-        self.path = os.path.realpath(self.name)
+        self.path = path
         self.delete = delete
         self.kind = kind
-        if not self.delete:
-            self._finalizer = None
-        else:
+        if path:
+            self._register_finalizer()
+
+    def _register_finalizer(self):
+        if self.delete and self.path:
             self._finalizer = finalize(
                 self,
                 self._cleanup,
-                self.name,
-                warn_message="Implicitly cleaning up {!r}".format(self),
+                warn_message=None
             )
-
-    @classmethod
-    def _cleanup(cls, name, warn_message):
-        rmtree(name)
-        warnings.warn(warn_message, ResourceWarning)
-
-    def cleanup(self):
-        if self.delete:
-            if getattr(self, "_finalizer") and self._finalizer.detach():
-                rmtree(self.name)
         else:
-            pass
+            self._finalizer = None
+
+    def __repr__(self):
+        return "<{} {!r}>".format(self.__class__.__name__, self.path)
 
     def __enter__(self):
+        self.create()
         return self
 
     def __exit__(self, exc, value, tb):
@@ -93,15 +86,27 @@ class TempDirectory(TemporaryDirectory):
         self.path = os.path.realpath(
             tempfile.mkdtemp(prefix="pip-{}-".format(self.kind))
         )
-        self.name = self.path
-        if self.delete:
-            if not getattr(self, "_finalizer"):
-                self._finalizer = finalize(
-                    self,
-                    self._cleanup,
-                    self.name,
-                    warn_message="Implicitly cleaning up {!r}".format(self),
-                )
-        else:
-            self._finalizer = None
+        self._register_finalizer()
         logger.debug("Created temporary directory: {}".format(self.path))
+
+    @classmethod
+    def _cleanup(cls, name, warn_message=None):
+        try:
+            rmtree(name)
+        except OSError:
+            pass
+        else:
+            if warn_message:
+                warnings.warn(warn_message, ResourceWarning)
+
+    def cleanup(self):
+        """Remove the temporary directory created and reset state
+        """
+        if getattr(self._finalizer, "detach", None) and self._finalizer.detach():
+            if os.path.exists(self.path):
+                try:
+                    rmtree(self.path)
+                except OSError:
+                    pass
+                else:
+                    self.path = None

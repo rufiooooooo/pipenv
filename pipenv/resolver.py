@@ -25,9 +25,6 @@ def get_parser():
     parser.add_argument("--system", action="store_true", default=False)
     parser.add_argument("--requirements-dir", metavar="requirements_dir", action="store",
                             default=os.environ.get("PIPENV_REQ_DIR"))
-    parser.add_argument("--src-dir", metavar="src_dir", action="store",
-                                default=os.environ.get("PIP_SRC",
-                                    os.environ.get("PIP_SRC_DIR", None)))
     parser.add_argument("packages", nargs="*")
     return parser
 
@@ -48,7 +45,7 @@ def handle_parsed_args(parsed):
     return parsed
 
 
-def _main(pre, clear, verbose, system, src_dir, requirements_dir, packages):
+def _main(pre, clear, verbose, system, requirements_dir, packages):
     os.environ["PIP_PYTHON_VERSION"] = ".".join([str(s) for s in sys.version_info[:3]])
     os.environ["PIP_PYTHON_PATH"] = str(sys.executable)
 
@@ -73,13 +70,6 @@ def _main(pre, clear, verbose, system, src_dir, requirements_dir, packages):
         )
 
     from pipenv.core import project
-    from pipenv.vendor.vistir.path import create_tracked_tempdir
-    src_dir = os.environ.get("PIP_SRC", os.environ.get("PIP_SRC_DIR",
-                                            project.virtualenv_src_location))
-    if not src_dir:
-        if not src_dir:
-            src_dir = create_tracked_tempdir(prefix="pipenv-", suffix="-src")
-    os.environ["PIP_SRC"] = src_dir
     sources = (
         replace_pypi_sources(project.pipfile_sources, pypi_mirror_source)
         if pypi_mirror_source
@@ -120,7 +110,7 @@ def main():
     parsed, remaining = parser.parse_known_args()
     # sys.argv = remaining
     parsed = handle_parsed_args(parsed)
-    _main(parsed.pre, parsed.clear, parsed.verbose, parsed.system, parsed.src_dir,
+    _main(parsed.pre, parsed.clear, parsed.verbose, parsed.system,
              parsed.requirements_dir, parsed.packages)
 
 
