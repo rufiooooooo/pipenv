@@ -47,6 +47,7 @@ class TempDirectory(object):
         self.path = path
         self.delete = delete
         self.kind = kind
+        self._finalizer = None
         if path:
             self._register_finalizer()
 
@@ -55,6 +56,7 @@ class TempDirectory(object):
             self._finalizer = finalize(
                 self,
                 self._cleanup,
+                self.path,
                 warn_message=None
             )
         else:
